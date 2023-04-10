@@ -120,6 +120,7 @@ pub fn add(lhs: Value, rhs: Value) -> StrResult<Value> {
             Value::dynamic(PartialStroke {
                 paint: Smart::Custom(color.into()),
                 thickness: Smart::Custom(thickness),
+                ..PartialStroke::default()
             })
         }
 
