@@ -301,6 +301,10 @@ cast_to_value! {
     v: Axes<Rel<Length>> => Value::Array(array![v.x, v.y])
 }
 
+cast_to_value! {
+    v: Axes<Abs> => Value::Array(array![v.x, v.y])
+}
+
 cast_from_value! {
     Axes<Length>,
     array: Array => {

@@ -25,17 +25,23 @@ impl PathItem {
         }
     }
 
-    /// Extreme point of drawing operation
-    pub fn extrema(&self, start: Point) -> Option<Point> {
+    pub fn bbox(&self, start: Point) -> Option<BoundingBox> {
         match self {
             PathItem::MoveTo(_) => None,
-            PathItem::LineTo(p) => Some(p.max(start)),
+            PathItem::LineTo(p) => Some(BoundingBox::from_points(start, *p)),
             PathItem::CubicTo(p1, p2, p3) => {
                 let bbox = kurbo::CubicBez::new(start, *p1, *p2, *p3).bounding_box();
-                Some(Point::new(Abs::raw(bbox.x1), Abs::raw(bbox.y1)))
+                let p1 = Point::new(Abs::raw(bbox.x0), Abs::raw(bbox.y0));
+                let p2 = Point::new(Abs::raw(bbox.x1), Abs::raw(bbox.y1));
+                Some(BoundingBox::from_points(p1, p2))
             }
             PathItem::ClosePath => None,
         }
+    }
+
+    /// Extreme point of drawing operation
+    pub fn extrema(&self, start: Point) -> Option<Point> {
+        self.bbox(start).map(|b| b.max)
     }
 
     pub fn transform(self, ts: Transform) -> Self {
@@ -103,5 +109,19 @@ impl Path {
             })
             .map(|p| Axes::new(p.x, p.y))
             .fold(Size::zero(), Size::max)
+    }
+
+    pub fn bbox(&self) -> Option<BoundingBox> {
+        let mut endpoint = Point::zero();
+        self.0
+            .iter()
+            .filter_map(|p| {
+                let val = p.bbox(endpoint);
+                if let Some(ep) = p.endpoint() {
+                    endpoint = ep;
+                }
+                val
+            })
+            .reduce(|a, b| a.extend(&b))
     }
 }

@@ -9,6 +9,7 @@ pub fn draw() -> crate::Module {
     draw.define("cubicto", cubicto);
     draw.define("arcto", arcto);
     draw.define("circle", circle);
+    draw.define("bbox", bbox);
     draw.define("path", DrawPathElem::func());
 
     crate::Module::new("draw").with_scope(draw)
@@ -518,4 +519,23 @@ pub fn circle(
     path.close_path();
     path.move_to(Axes::new(DeltaAbs::Delta((-r).into()), DeltaAbs::Delta(Rel::zero())));
     path.into()
+}
+
+/// Computes the bounding box of a path
+///
+/// Display: Bbox
+/// Category: draw
+/// Returns: dictionary
+#[func]
+pub fn bbox(
+    /// The path whose bounding box to compute.
+    path: PathBuilder,
+    /// The styles with which to layout the content.
+    styles: Styles,
+    // TODO: allow to specify size
+) -> Value {
+    let pod = Regions::one(Axes::splat(Abs::inf()), Axes::splat(false));
+    let styles = StyleChain::new(&styles);
+    let path = path.resolve(styles).to_path(pod.base());
+    path.bbox().into()
 }
